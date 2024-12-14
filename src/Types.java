@@ -347,7 +347,7 @@ public class Types {
             this.value = value;
         }
 
-        public static final Piece[] values = new Piece[]{
+        private static final Piece[] valueList = new Piece[]{
                 NO_PIECE, // 0
                 W_PAWN, W_KNIGHT, W_BISHOP, W_ROOK, W_QUEEN, W_KING,
                 NO_PIECE, // 7
@@ -356,7 +356,11 @@ public class Types {
         };
 
         public static Piece of(Color c, PieceType pt) {
-            return values[c.ordinal() << 3 + pt.ordinal()];
+            return valueList[(c.ordinal() << 3) + pt.ordinal()];
+        }
+
+        public Piece toggle() {
+            return valueList[this.value ^ 8];
         }
 
     }
@@ -435,10 +439,30 @@ public class Types {
             return values[i];
         }
 
+        public static Square of(File f, Rank r) {
+            return Square.of((r.ordinal() << 3) + f.ordinal());
+        }
+
         public static boolean is_ok(int s) { return s >= Square.SQ_A1.ordinal() && s <= Square.SQ_H8.ordinal(); }
 
         public static Square relative(Color c, Square s) {
             return values[s.ordinal() ^ (c.ordinal() * 56)];
+        }
+
+        public Square flip_rank() {
+            return of(this.ordinal() ^ Square.SQ_A8.ordinal());
+        }
+
+        public Square flip_file() {
+            return of(this.ordinal() ^ Types.Square.SQ_H1.ordinal());
+        }
+
+        public Square plus(Direction d) {
+            return of(this.ordinal() + d.value);
+        }
+
+        public Square minus(Direction d) {
+            return of(this.ordinal() - d.value);
         }
 
     }
@@ -606,11 +630,11 @@ public class Types {
 //        inline Square&   operator-=(Square& s, Direction d) { return s = s - d; }
 
     public static int SquarePlus(Square s, Direction d) {
-        return s.ordinal() + d.value;
+        return s.plus(d).ordinal();
     }
 
     public static int SquareMinus(Square s, Direction d) {
-        return s.ordinal() - d.value;
+        return s.minus(d).ordinal();
     }
 
 // Toggle color
@@ -621,17 +645,11 @@ public class Types {
 // Swap A1 <-> A8
 //        constexpr Square flip_rank(Square s) { return Square(s ^ SQ_A8); }
 
-    public static int flip_rank(Square s) { return s.ordinal() ^ Square.SQ_A8.ordinal(); }
-
 // Swap A1 <-> H1
 //        constexpr Square flip_file(Square s) { return Square(s ^ SQ_H1); }
 
-    public static int flip_file(Square s) { return s.ordinal() ^ Types.Square.SQ_H1.ordinal(); }
-
 // Swap color of piece B_KNIGHT <-> W_KNIGHT
 //        constexpr Piece operator~(Piece pc) { return Piece(pc ^ 8); }
-
-    public static Piece PieceToggle(Piece pc) { return Piece.values()[pc.ordinal() ^ 8]; }
 
 //        constexpr CastlingRights operator&(Color c, CastlingRights cr) {
 //            return CastlingRights((c == WHITE ? WHITE_CASTLING : BLACK_CASTLING) & cr);
@@ -653,25 +671,19 @@ public class Types {
 
 //        constexpr Square make_square(File f, Rank r) { return Square((r << 3) + f); }
 
-    public static Square make_square(File f, Rank r) { return Square.of((r.ordinal() << 3) + f.ordinal()); }
-
 //        constexpr Piece make_piece(Color c, PieceType pt) { return Piece((c << 3) + pt); }
 
-    public static Piece make_piece(Color c, PieceType pt) { return Piece.of(c, pt); }
-
 //        constexpr PieceType type_of(Piece pc) { return PieceType(pc & 7); }
-
-    public static PieceType type_of(Piece pc) { return PieceType.of(pc); }
 
 //        inline Color color_of(Piece pc) {
 //            assert(pc != NO_PIECE);
 //            return Color(pc >> 3);
 //        }
 
-    public static Color color_of(Piece pc) {
-        assert(pc != Piece.NO_PIECE);
-        return Color.of(pc);
-    }
+//    public static Color color_of(Piece pc) {
+//        assert(pc != Piece.NO_PIECE);
+//        return Color.of(pc);
+//    }
 
 //        constexpr bool is_ok(Square s) { return s >= SQ_A1 && s <= SQ_H8; }
 
@@ -720,7 +732,12 @@ public class Types {
         private static final MoveType[] values = values();
 
         public static MoveType of(int i) {
-            return values[i];
+            for (MoveType mt: values) {
+                if (mt.value == i) {
+                    return mt;
+                }
+            }
+            throw new IllegalArgumentException("MoveType " + i);
         }
 
     }
@@ -793,7 +810,7 @@ public class Types {
      */
         public static class Move {
 
-            public static short Move(Square from, Square to) {
+            public static short move(Square from, Square to) {
                 return (short) ((from.ordinal() << 6) + to.ordinal());
             }
 
