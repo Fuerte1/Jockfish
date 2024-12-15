@@ -48,7 +48,7 @@ class PRNG {
 
     public static class PRNG {
 
-        private long s;
+        public long s;
 
         public long rand64() {
             s ^= s >>> 12;

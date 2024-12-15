@@ -137,7 +137,7 @@ constexpr Bitboard square_bb(Square s) {
         }
 
         long attacks_bb(long occupied) {
-            return attacks[index(occupied)];
+            return attacks[index(occupied) + attackIndex];
         }
     }
 
@@ -283,7 +283,7 @@ constexpr Bitboard square_bb(Square s) {
 // straight or on a diagonal line.
 //        inline bool aligned(Square s1, Square s2, Square s3) { return line_bb(s1, s2) & s3; }
     public static boolean aligned(Types.Square s1, Types.Square s2, Types.Square s3) {
-        return (line_bb(s1, s2) & s3.ordinal()) != 0;
+        return (line_bb(s1, s2) & square_bb(s3)) != 0;
     }
 
 
@@ -688,12 +688,13 @@ void Bitboards::init() {
             for (Types.PieceType pt : bishopRook) {
                 for (int i2 = Types.Square.SQ_A1.ordinal(); i2 <= Types.Square.SQ_H8.ordinal(); ++i2) {
                     Types.Square s2 = Types.Square.of(i2);
-                    if ((PseudoAttacks[pt.ordinal()][i1] & i2) != 0) {
-                        LineBB[i1][i2] = (attacks_bb(pt, s1, 0) & attacks_bb(pt, s2, 0)) | i1 | i2;
+                    if ((PseudoAttacks[pt.ordinal()][i1] & square_bb(i2)) != 0) {
+                        LineBB[i1][i2] = (attacks_bb(pt, s1, 0) & attacks_bb(pt, s2, 0))
+                                | square_bb(i1) | square_bb(i2);
                         BetweenBB[i1][i2] =
                                 (attacks_bb(pt, s1, square_bb(s2)) & attacks_bb(pt, s2, square_bb(s1)));
                     }
-                    BetweenBB[i1][i2] |= i2;
+                    BetweenBB[i1][i2] |= square_bb(i2);
                 }
             }
         }
@@ -729,12 +730,13 @@ Bitboard sliding_attack(PieceType pt, Square sq, Bitboard occupied) {
             new Types.Direction[]{Types.Direction.NORTH_EAST, Types.Direction.SOUTH_EAST, Types.Direction.SOUTH_WEST, Types.Direction.NORTH_WEST};
 
     public static long sliding_attack(Types.PieceType pt, Types.Square sq, long occupied) {
-        long  attacks = 0;
+        long attacks = 0;
         for (Types.Direction d : (pt == Types.PieceType.ROOK ? RookDirections : BishopDirections)) {
             int s = sq.ordinal();
             while (safe_destination(s, d.value) != 0) {
-                attacks |= (s += d.value);
-                if ((occupied & s) != 0) {
+                long square_bb = square_bb(s += d.value);
+                attacks |= square_bb;
+                if ((occupied & square_bb) != 0) {
                     break;
                 }
             }
@@ -842,6 +844,7 @@ void init_magics(PieceType pt, Bitboard table[], Magic magics[][2]) {
         int cnt = 0;
         long[] reference = new long[4096];
         int size = 0;
+        Misc.PRNG rng = new Misc.PRNG(0);
         for (int si = Types.Square.SQ_A1.ordinal(); si <= Types.Square.SQ_H8.ordinal(); ++si) {
             Types.Square s = Types.Square.of(si);
             // Board edges are not considered in the relevant occupancies
@@ -853,7 +856,8 @@ void init_magics(PieceType pt, Bitboard table[], Magic magics[][2]) {
             // apply to the 64 or 32 bits word to get the index.
             Magic m = new Magic();
             magics[si][pt.ordinal() - Types.PieceType.BISHOP.ordinal()] = m;
-            m.mask = sliding_attack(pt, s, 0) & ~edges;
+            long sliding_attack = sliding_attack(pt, s, 0);
+            m.mask = sliding_attack & ~edges;
             m.shift = 64 - popcount(m.mask);
             // Set the offset for the attacks table of the square. We have individual
             // table sizes for each square with "Fancy Magic Bitboards".
@@ -875,7 +879,7 @@ void init_magics(PieceType pt, Bitboard table[], Magic magics[][2]) {
                 size++;
                 b = (b - m.mask) & m.mask;
             } while (b != 0);
-            Misc.PRNG rng = new Misc.PRNG(seeds[1][Types.Rank.of(s).ordinal()]);
+            rng.s = seeds[1][Types.Rank.of(s).ordinal()];
 
             // Find a magic for square 's' picking up an (almost) random number
             // until we find the one that passes the verification test.

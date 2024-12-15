@@ -45,33 +45,46 @@ class BitBoardTest {
         assertTrue(BitBoard.more_than_one(3));
         assertTrue(BitBoard.more_than_one(-1));
         // rank_bb
-        assertEquals(255, BitBoard.rank_bb(Types.Rank.RANK_1));
-        assertEquals(65280, BitBoard.rank_bb(Types.Rank.RANK_2));
+        assertEquals(0b11111111L, BitBoard.rank_bb(Types.Rank.RANK_1));
+        assertEquals(0b11111111_00000000L, BitBoard.rank_bb(Types.Rank.RANK_2));
         // rank_bb
-        assertEquals(255, BitBoard.rank_bb(Types.Square.SQ_A1));
-        assertEquals(65280, BitBoard.rank_bb(Types.Square.SQ_A2));
+        assertEquals(0b11111111L, BitBoard.rank_bb(Types.Square.SQ_A1));
+        assertEquals(0b11111111_00000000L, BitBoard.rank_bb(Types.Square.SQ_A2));
         // file_bb
-        assertEquals(72340172838076673L, BitBoard.file_bb(Types.File.FILE_A));
-        assertEquals(144680345676153346L, BitBoard.file_bb(Types.File.FILE_B));
+        assertEquals(0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001L, BitBoard.file_bb(Types.File.FILE_A));
+        assertEquals(0b00000010_00000010_00000010_00000010_00000010_00000010_00000010_00000010L, BitBoard.file_bb(Types.File.FILE_B));
         // file_bb
-        assertEquals(72340172838076673L, BitBoard.file_bb(Types.Square.SQ_A1));
-        assertEquals(144680345676153346L, BitBoard.file_bb(Types.Square.SQ_B1));
+        assertEquals(0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001L, BitBoard.file_bb(Types.Square.SQ_A1));
+        assertEquals(0b00000010_00000010_00000010_00000010_00000010_00000010_00000010_00000010L, BitBoard.file_bb(Types.Square.SQ_B1));
         // shift
-        assertEquals(256, BitBoard.shift(Types.Direction.NORTH.value, 1));
+        assertEquals(0b00000001_00000000L, BitBoard.shift(Types.Direction.NORTH.value, 1));
         assertEquals(0, BitBoard.shift(Types.Direction.SOUTH.value, 1));
-        assertEquals(65536, BitBoard.shift(Types.Direction.NORTH.value * 2, 1));
-        assertEquals(2, BitBoard.shift(Types.Direction.EAST.value, 1));
+        assertEquals(0b00000001_00000000_00000000L, BitBoard.shift(Types.Direction.NORTH.value * 2, 1));
+        assertEquals(0b10L, BitBoard.shift(Types.Direction.EAST.value, 1));
         // pawn_attacks_bb
-        assertEquals(256 + 1024, BitBoard.pawn_attacks_bb(Types.Color.WHITE, 2));
-        assertEquals(0, BitBoard.pawn_attacks_bb(Types.Color.WHITE, Types.Square.SQ_B1)); // TODO
+        assertEquals(0b00000101_00000000L, BitBoard.pawn_attacks_bb(Types.Color.WHITE, 2));
+        assertEquals(0b0101_00000000_00000000L, BitBoard.pawn_attacks_bb(Types.Color.WHITE, Types.Square.SQ_B2));
+        assertEquals(0b00101_00000000_00000000_00000000_00000000_00000000L,
+                BitBoard.pawn_attacks_bb(Types.Color.BLACK, Types.Square.SQ_B7));
         // line_bb
-        assertEquals(0, BitBoard.line_bb(Types.Square.SQ_A1, Types.Square.SQ_A2)); // TODO
+        assertEquals(0b11111111L,
+                BitBoard.line_bb(Types.Square.SQ_A1, Types.Square.SQ_B1));
+        assertEquals(0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001L,
+                BitBoard.line_bb(Types.Square.SQ_A1, Types.Square.SQ_A2));
+        assertEquals(0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001L,
+                BitBoard.line_bb(Types.Square.SQ_A1, Types.Square.SQ_B2));
         // between_bb
-        assertEquals(0, BitBoard.between_bb(Types.Square.SQ_A1, Types.Square.SQ_A3)); // TODO
+        // between_bb(SQ_C4, SQ_F7) will return a bitboard with squares D5, E6 and F7, but
+        assertEquals(0b00100000_00010000_00001000_00000000_00000000_00000000_00000000L,
+                BitBoard.between_bb(Types.Square.SQ_C4, Types.Square.SQ_F7));
+        // between_bb(SQ_E6, SQ_F8) will return a bitboard with the square F8. This trick
+        assertEquals(0b00100000_00000000_00000000_00000000_00000000_00000000_00000000_00000000L,
+                BitBoard.between_bb(Types.Square.SQ_E6, Types.Square.SQ_F8));
+        assertEquals(0b0001_00000001_00000000L, BitBoard.between_bb(Types.Square.SQ_A1, Types.Square.SQ_A3));
         // aligned
-        assertFalse(BitBoard.aligned(Types.Square.SQ_A1, Types.Square.SQ_A2, Types.Square.SQ_A3)); // TODO
-        assertFalse(BitBoard.aligned(Types.Square.SQ_A1, Types.Square.SQ_B1, Types.Square.SQ_C1)); // TODO
-        assertFalse(BitBoard.aligned(Types.Square.SQ_A1, Types.Square.SQ_B2, Types.Square.SQ_C3)); // TODO
+        assertTrue(BitBoard.aligned(Types.Square.SQ_A1, Types.Square.SQ_A2, Types.Square.SQ_A3));
+        assertTrue(BitBoard.aligned(Types.Square.SQ_A1, Types.Square.SQ_B1, Types.Square.SQ_C1));
+        assertTrue(BitBoard.aligned(Types.Square.SQ_A1, Types.Square.SQ_B2, Types.Square.SQ_C3));
         assertFalse(BitBoard.aligned(Types.Square.SQ_A1, Types.Square.SQ_B2, Types.Square.SQ_C2));
         // distanceFile
         assertEquals(0, BitBoard.distanceFile(Types.Square.SQ_A1, Types.Square.SQ_A2));
@@ -80,24 +93,31 @@ class BitBoardTest {
         assertEquals(1, BitBoard.distanceRank(Types.Square.SQ_A1, Types.Square.SQ_A2));
         assertEquals(0, BitBoard.distanceRank(Types.Square.SQ_A1, Types.Square.SQ_B1));
         // distanceSquare
-        assertEquals(0, BitBoard.distanceSquare(Types.Square.SQ_A1, Types.Square.SQ_A3)); // TODO
-        assertEquals(0, BitBoard.distanceSquare(Types.Square.SQ_A1, Types.Square.SQ_C1)); // TODO
+        assertEquals(2, BitBoard.distanceSquare(Types.Square.SQ_A1, Types.Square.SQ_A3));
+        assertEquals(2, BitBoard.distanceSquare(Types.Square.SQ_A1, Types.Square.SQ_C1));
         // edge_distance
         assertEquals(0, BitBoard.edge_distance(Types.File.FILE_A));
         assertEquals(1, BitBoard.edge_distance(Types.File.FILE_B));
         assertEquals(0, BitBoard.edge_distance(Types.File.FILE_H));
         // attacks_bb
-        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.KNIGHT, Types.Square.SQ_A1)); // TODO
-        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.BISHOP, Types.Square.SQ_A1)); // TODO
-        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.ROOK, Types.Square.SQ_A1)); // TODO
-        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.QUEEN, Types.Square.SQ_A1)); // TODO
-        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.KING, Types.Square.SQ_A1)); // TODO
+        assertEquals(0b0010_00000100_00000000L, BitBoard.attacks_bb(Types.PieceType.KNIGHT, Types.Square.SQ_A1));
+        assertEquals(0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000000L,
+                BitBoard.attacks_bb(Types.PieceType.BISHOP, Types.Square.SQ_A1));
+        assertEquals(0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_11111110L,
+                BitBoard.attacks_bb(Types.PieceType.ROOK, Types.Square.SQ_A1));
+        assertEquals(0b10000001_01000001_00100001_00010001_00001001_00000101_00000011_11111110L,
+                BitBoard.attacks_bb(Types.PieceType.QUEEN, Types.Square.SQ_A1));
+        assertEquals(0b0011_00000010L, BitBoard.attacks_bb(Types.PieceType.KING, Types.Square.SQ_A1));
         // attacks_bb(Types.PieceType pt, Types.Square s, long occupied)
-        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.KNIGHT, Types.Square.SQ_A1, 1)); // TODO
-//        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.BISHOP, Types.Square.SQ_A1, 1)); // TODO
-//        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.ROOK, Types.Square.SQ_A1, 1)); // TODO
-//        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.QUEEN, Types.Square.SQ_A1, 1)); // TODO
-        assertEquals(0, BitBoard.attacks_bb(Types.PieceType.KING, Types.Square.SQ_A1, 1)); // TODO
+        assertEquals(0b0010_00000100_00000000L,
+                BitBoard.attacks_bb(Types.PieceType.KNIGHT, Types.Square.SQ_A1, 1));
+        assertEquals(0b10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000000L,
+                BitBoard.attacks_bb(Types.PieceType.BISHOP, Types.Square.SQ_A1, 1));
+        assertEquals(0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_11111110L,
+                BitBoard.attacks_bb(Types.PieceType.ROOK, Types.Square.SQ_A1, 1));
+        assertEquals(0b10000001_01000001_00100001_00010001_00001001_00000101_00000011_11111110L,
+                BitBoard.attacks_bb(Types.PieceType.QUEEN, Types.Square.SQ_A1, 1));
+        assertEquals(0b0011_00000010L, BitBoard.attacks_bb(Types.PieceType.KING, Types.Square.SQ_A1, 1));
         // popcount
         assertEquals(0, BitBoard.popcount(0));
         assertEquals(1, BitBoard.popcount(1));
