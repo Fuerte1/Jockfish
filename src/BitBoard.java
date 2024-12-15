@@ -2,8 +2,6 @@
 //#ifndef BITBOARD_H_INCLUDED
 //#define BITBOARD_H_INCLUDED
 
-import java.util.Arrays;
-
 public class BitBoard {
 // bitboard.h
 
@@ -558,8 +556,8 @@ constexpr Bitboard square_bb(Square s) {
 //    RookTable[0x19000];   // To store rook attacks
 //    Bitboard BishopTable[0x1480];  // To store bishop attacks
 
-    private static long[] RookTable = new long[0x19000];   // To store rook attacks
-    private static long[] BishopTable = new long[0x1480];  // To store bishop attacks
+    private static final long[] RookTable = new long[0x19000];   // To store rook attacks
+    private static final long[] BishopTable = new long[0x1480];  // To store bishop attacks
 
 // Returns the bitboard of target square for the given step
 // from the given square. If the step is off the board, returns empty bitboard.
@@ -602,7 +600,7 @@ constexpr Bitboard square_bb(Square s) {
         StringBuilder s = new StringBuilder("+---+---+---+---+---+---+---+---+\n");
         for (int r = Types.Rank.RANK_8.ordinal(); r >= Types.Rank.RANK_1.ordinal(); --r) {
             for (int f = Types.File.FILE_A.ordinal(); f <= Types.File.FILE_H.ordinal(); ++f) {
-                s.append((b & Types.Square.of(f, r).ordinal()) != 0 ? "| X " : "|   ");
+                s.append((b & square_bb(Types.Square.of(f, r))) != 0 ? "| X " : "|   ");
             }
             s.append("| ");
             s.append(1 + r);
@@ -724,9 +722,9 @@ Bitboard sliding_attack(PieceType pt, Square sq, Bitboard occupied) {
 }
      */
 
-    private static Types.Direction[] RookDirections =
+    private static final Types.Direction[] RookDirections =
             new Types.Direction[]{Types.Direction.NORTH, Types.Direction.SOUTH, Types.Direction.EAST, Types.Direction.WEST};
-    private static Types.Direction[] BishopDirections =
+    private static final Types.Direction[] BishopDirections =
             new Types.Direction[]{Types.Direction.NORTH_EAST, Types.Direction.SOUTH_EAST, Types.Direction.SOUTH_WEST, Types.Direction.NORTH_WEST};
 
     public static long sliding_attack(Types.PieceType pt, Types.Square sq, long occupied) {
