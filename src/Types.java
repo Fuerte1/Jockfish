@@ -1,20 +1,3 @@
-/*
-  Stockfish, a UCI chess playing engine derived from Glaurung 2.1
-  Copyright (C) 2004-2024 The Stockfish developers (see AUTHORS file)
-
-  Stockfish is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  Stockfish is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 public class Types {
 
@@ -156,7 +139,7 @@ public class Types {
         }
 
         public static Color of(Piece pc) {
-            return values[pc.value >> 3];
+            return values[pc.value >>> 3];
         }
 
         private static final Direction[] pawnDirection = new Direction[]{Direction.NORTH, Direction.SOUTH};
@@ -424,14 +407,14 @@ public class Types {
 
     public enum Square {
         SQ_A1, SQ_B1, SQ_C1, SQ_D1, SQ_E1, SQ_F1, SQ_G1, SQ_H1,
-                SQ_A2, SQ_B2, SQ_C2, SQ_D2, SQ_E2, SQ_F2, SQ_G2, SQ_H2,
-                SQ_A3, SQ_B3, SQ_C3, SQ_D3, SQ_E3, SQ_F3, SQ_G3, SQ_H3,
-                SQ_A4, SQ_B4, SQ_C4, SQ_D4, SQ_E4, SQ_F4, SQ_G4, SQ_H4,
-                SQ_A5, SQ_B5, SQ_C5, SQ_D5, SQ_E5, SQ_F5, SQ_G5, SQ_H5,
-                SQ_A6, SQ_B6, SQ_C6, SQ_D6, SQ_E6, SQ_F6, SQ_G6, SQ_H6,
-                SQ_A7, SQ_B7, SQ_C7, SQ_D7, SQ_E7, SQ_F7, SQ_G7, SQ_H7,
-                SQ_A8, SQ_B8, SQ_C8, SQ_D8, SQ_E8, SQ_F8, SQ_G8, SQ_H8,
-                SQ_NONE;
+        SQ_A2, SQ_B2, SQ_C2, SQ_D2, SQ_E2, SQ_F2, SQ_G2, SQ_H2,
+        SQ_A3, SQ_B3, SQ_C3, SQ_D3, SQ_E3, SQ_F3, SQ_G3, SQ_H3,
+        SQ_A4, SQ_B4, SQ_C4, SQ_D4, SQ_E4, SQ_F4, SQ_G4, SQ_H4,
+        SQ_A5, SQ_B5, SQ_C5, SQ_D5, SQ_E5, SQ_F5, SQ_G5, SQ_H5,
+        SQ_A6, SQ_B6, SQ_C6, SQ_D6, SQ_E6, SQ_F6, SQ_G6, SQ_H6,
+        SQ_A7, SQ_B7, SQ_C7, SQ_D7, SQ_E7, SQ_F7, SQ_G7, SQ_H7,
+        SQ_A8, SQ_B8, SQ_C8, SQ_D8, SQ_E8, SQ_F8, SQ_G8, SQ_H8,
+        SQ_NONE;
 
         private static final Square[] values = values();
 
@@ -441,6 +424,10 @@ public class Types {
 
         public static Square of(File f, Rank r) {
             return Square.of((r.ordinal() << 3) + f.ordinal());
+        }
+
+        public static Square of(int f, int r) {
+            return Square.of((r << 3) + f);
         }
 
         public static boolean is_ok(int s) { return s >= Square.SQ_A1.ordinal() && s <= Square.SQ_H8.ordinal(); }
@@ -551,13 +538,12 @@ public class Types {
         RANK_5,
         RANK_6,
         RANK_7,
-        RANK_8,
-        RANK_NB;
+        RANK_8;
 
         private static final Rank[] values = values();
 
         public static Rank of(Square s) {
-            return values[s.ordinal() >> 3];
+            return values[s.ordinal() >>> 3];
         }
 
         public static Rank relative(Color c, Rank r) {
@@ -569,6 +555,8 @@ public class Types {
         }
 
     }
+
+    public static int RANK_NB = 8;
 
     // Keep track of what a move changes on the board (used by NNUE)
 //        struct DirtyPiece {
@@ -823,7 +811,7 @@ public class Types {
 
             public static Square from_sq(short data) {
                 assert(is_ok(data));
-                return Square.of((data >> 6) & 0x3F);
+                return Square.of((data >>> 6) & 0x3F);
             }
 
             public static Square to_sq(short data) {
@@ -836,7 +824,7 @@ public class Types {
             public static MoveType type_of(short data) { return MoveType.of(data & (3 << 14)); }
 
             public static PieceType promotion_type(short data) {
-                return PieceType.of(((data >> 12) & 3) + PieceType.KNIGHT.ordinal());
+                return PieceType.of(((data >>> 12) & 3) + PieceType.KNIGHT.ordinal());
             }
 
             public static boolean is_ok(short data) { return none() != data && Null() != data; }
